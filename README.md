@@ -1,4 +1,5 @@
-# 📊 Customer Churn Prediction — Machine Learning Project
+# Customer Churn Prediction 
+## Saving At-Risk Buyers: Machine Learning Approach to Reduce Churn in E-Commerce
 
 ---
 
