@@ -6,3 +6,5 @@ lightgbm
 imbalanced-learn
 joblib
 xgboost
+category_encoders
+altair
