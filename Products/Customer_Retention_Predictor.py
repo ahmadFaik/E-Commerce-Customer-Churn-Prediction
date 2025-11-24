@@ -1,20 +1,26 @@
-# import library
 import streamlit as st
 import numpy as np
 import pandas as pd
 import pickle
+import os  # <--- Menambahkan import OS
 
-# Judul Utama
+# Main title of the web app
 st.title('Customer Churn Predictor')
-st.text('This web predicts the likelihood of a customer churning')
+st.text('This application predicts the likelihood of a customer churning based on their behavior and preferences.')
 
-# Menambahkan sidebar
+# Sidebar for user input
 st.sidebar.header("Please input customer features")
 
 def create_user_input():
+    """
+    Create interactive widgets in the sidebar to collect input features from the user.
+    Returns a single-row DataFrame containing the customer's data.
+    """
+
+    # Numeric inputs
     Tenure = st.sidebar.slider('Tenure (in months)', 0, 61, 12)
     WarehouseToHome = st.sidebar.slider('Warehouse To Home (in km)', 5, 126, 20)
-    HourSpendOnApp = st.sidebar.slider('Hour Spent on App (per day)', 0.0, 5.0, 1.0)
+    HourSpendOnApp = st.sidebar.slider('Hours Spent on App (per day)', 0.0, 5.0, 1.0)
     NumberOfDeviceRegistered = st.sidebar.slider('Number of Devices Registered', 1, 6, 2)
     OrderAmountHikeFromlastYear = st.sidebar.slider('Order Amount Hike From Last Year (%)', 11, 26, 15)
     CouponUsed = st.sidebar.slider('Coupons Used', 0, 16, 3)
@@ -22,17 +28,24 @@ def create_user_input():
     DaySinceLastOrder = st.sidebar.slider('Days Since Last Order', 0, 46, 10)
     CashbackAmount = st.sidebar.slider('Cashback Amount', 0.0, 324.99, 50.0)
 
+    # Categorical features
     PreferredLoginDevice = st.sidebar.selectbox('Preferred Login Device', ['Mobile Phone', 'Computer'])
     CityTier = st.sidebar.selectbox('City Tier', ['1', '2', '3'])
-    PreferredPaymentMode = st.sidebar.selectbox('Preferred Payment Mode', ['Debit Card', 'Credit Card', 'E wallet', 'Cash on Delivery', 'UPI'])
+    PreferredPaymentMode = st.sidebar.selectbox(
+        'Preferred Payment Mode',
+        ['Debit Card', 'Credit Card', 'E wallet', 'Cash on Delivery', 'UPI']
+    )
     Gender = st.sidebar.selectbox('Gender', ['Female', 'Male'])
-    PreferedOrderCat = st.sidebar.selectbox('Preferred Order Category', ['Mobile Phone', 'Laptop & Accessory', 'Grocery', 'Fashion', 'Others'])
+    PreferedOrderCat = st.sidebar.selectbox(
+        'Preferred Order Category',
+        ['Mobile Phone', 'Laptop & Accessory', 'Grocery', 'Fashion', 'Others']
+    )
     SatisfactionScore = st.sidebar.selectbox('Satisfaction Score', ['1', '2', '3', '4', '5'])
     MaritalStatus = st.sidebar.selectbox('Marital Status', ['Single', 'Married', 'Divorced'])
     Complain = st.sidebar.radio('Customer Complaint?', [0, 1])
     CountOfAddress = st.sidebar.selectbox('Count of Address', ['1–2', '3', '4–6', '7+'])
 
-
+    # Collect inputs
     user_data = {
         'Tenure': Tenure,
         'WarehouseToHome': WarehouseToHome,
@@ -56,25 +69,44 @@ def create_user_input():
 
     return pd.DataFrame([user_data])
 
-# Ambil data dari input user
+
+# Get input data
 data_customer = create_user_input()
 
-# Load model
-with open('final_tuned_lightgbm_ros_selectkbest.pkl', 'rb') as f:
-    model_loaded = pickle.load(f)
-
-# Cek apakah data input sesuai urutan kolom model
+# ---------------------------------------------------------
+# PERBAIKAN LOAD MODEL (Menggunakan Absolute Path)
+# ---------------------------------------------------------
 try:
-    # (Optional) urutkan kolom input jika model punya .feature_names_in_
+    # Mendapatkan lokasi folder tempat script ini berada
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Menggabungkan path folder dengan nama file
+    model_path = os.path.join(script_dir, 'final_tuned_lightgbm_ros_selectkbest.pkl')
+    
+    # Membuka file dengan path lengkap
+    with open(model_path, 'rb') as f:
+        model_loaded = pickle.load(f)
+
+except FileNotFoundError:
+    st.error("Error: Model file not found.")
+    st.write(f"Looking for file at: {model_path}") # Debugging info
+    st.stop()
+except Exception as e:
+    st.error(f"An error occurred while loading the model: {e}")
+    st.stop()
+# ---------------------------------------------------------
+
+# Reorder columns if needed
+try:
     data_customer = data_customer[model_loaded.feature_names_in_]
 except AttributeError:
-    pass  # model tidak menyimpan nama kolom fitur, lewati saja
+    pass
 
-# Tampilkan input user
+# Display input
 st.subheader("Customer's Features")
 st.write(data_customer.transpose())
 
-# Prediksi churn
+# Predict churn
 try:
     kelas = model_loaded.predict(data_customer)
     prob = model_loaded.predict_proba(data_customer)[0]
@@ -82,8 +114,9 @@ except Exception as e:
     st.error(f"Prediction failed: {e}")
     st.stop()
 
-# Tampilkan hasil prediksi
+# Show result
 st.subheader("Prediction Result")
+
 if kelas[0] == 1:
     st.success("Churn: **Yes** – This customer is likely to churn.")
 else:
