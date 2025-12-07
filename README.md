@@ -1,5 +1,10 @@
-# Customer Churn Prediction 
+# E-Commerce Customer Churn Prediction 
 ## Saving At-Risk Buyers: Machine Learning Approach to Reduce Churn in E-Commerce
+
+![alt text](Products/Simulator.gif)
+
+### 🌐 Live App  
+[Try it here! Customer Churn Predictor](https://e-commerce-customer-churn-prediction-25.streamlit.app/)
 
 ---
 
