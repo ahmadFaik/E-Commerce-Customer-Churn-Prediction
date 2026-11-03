@@ -1,9 +1,17 @@
-streamlit
+# Runtime pins for the Streamlit app.
+# The model pickle stores fitted objects from scikit-learn, category_encoders,
+# imbalanced-learn, lightgbm and pandas, and it internally references
+# `numpy.core` (renamed to `numpy._core` in numpy 2.x). Unpinned installs let
+# the deploy resolve numpy/pandas 2.x+ and newer encoders, which can break
+# unpickling or silently change transform behaviour. Keep these pinned to the
+# versions the model was trained and verified with.
+streamlit==1.37.1
 scikit-learn==1.6.1
-pandas
-numpy
-joblib
-lightgbm
-xgboost
-imbalanced-learn
-category_encoders
+pandas==2.3.2
+numpy==1.26.4
+scipy==1.13.1
+joblib==1.4.2
+lightgbm==4.6.0
+xgboost==3.0.2
+imbalanced-learn==0.12.3
+category_encoders==2.8.1
