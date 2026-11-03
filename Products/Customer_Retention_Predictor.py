@@ -154,6 +154,19 @@ st.dataframe(features_view, hide_index=True, use_container_width=True)
 try:
     kelas = model_loaded.predict(data_customer)
     prob = model_loaded.predict_proba(data_customer)[0]
+except AttributeError as e:
+    # A fitted estimator in the pickle is missing an attribute that the
+    # installed library version expects. This means the deployed dependency
+    # versions have drifted away from the ones that fitted the model, e.g.
+    # category_encoders 2.9.0+ expecting `min_group_lumping_`.
+    st.error(f"Prediction failed: {e}")
+    st.warning(
+        "This looks like a library version mismatch rather than a bad input: "
+        "an object inside the saved model is missing an attribute the "
+        "installed version expects. Check that the deployed packages match "
+        "the pins in requirements.txt, then reboot the app."
+    )
+    st.stop()
 except Exception as e:
     st.error(f"Prediction failed: {e}")
     st.stop()

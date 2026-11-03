@@ -1,17 +1,30 @@
 # Runtime pins for the Streamlit app.
-# The model pickle stores fitted objects from scikit-learn, category_encoders,
-# imbalanced-learn, lightgbm and pandas, and it internally references
-# `numpy.core` (renamed to `numpy._core` in numpy 2.x). Unpinned installs let
-# the deploy resolve numpy/pandas 2.x+ and newer encoders, which can break
-# unpickling or silently change transform behaviour. Keep these pinned to the
-# versions the model was trained and verified with.
-streamlit==1.37.1
-scikit-learn==1.6.1
-pandas==2.3.2
-numpy==1.26.4
-scipy==1.13.1
-joblib==1.4.2
-lightgbm==4.6.0
-xgboost==3.0.2
-imbalanced-learn==0.12.3
+#
+# The model pickle stores FITTED objects, so the libraries that rebuild them
+# must match the ones that fitted them. Exact pins below are the ones that
+# actually matter for unpickling; the rest are ranges so the install keeps
+# working on newer Python releases.
+#
+# category_encoders is the critical one: releases after 2.8.1 added
+# minimum-group lumping, and their transform() reads a fitted
+# `min_group_lumping_` attribute that this pickle does not carry. Installing
+# 2.9.0+ fails at predict time with
+#   AttributeError: 'BinaryEncoder' object has no attribute 'min_group_lumping_'
 category_encoders==2.8.1
+
+# The pickle is an imblearn Pipeline containing a RandomOverSampler.
+imbalanced-learn==0.12.3
+
+# Fitted ColumnTransformer / SimpleImputer / RobustScaler / OrdinalEncoder /
+# OneHotEncoder / SelectKBest live in the pickle.
+scikit-learn==1.6.1
+lightgbm==4.6.0
+
+streamlit==1.37.1
+
+# Ranges, not exact pins: numpy 1.26.4 and scipy 1.13.1 ship no cp313 wheels,
+# so pinning them exactly breaks the install on Python 3.13.
+numpy>=1.26,<3
+pandas>=2.2,<3
+scipy>=1.13
+joblib>=1.4
